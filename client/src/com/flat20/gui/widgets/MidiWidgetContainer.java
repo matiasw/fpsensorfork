@@ -1,10 +1,7 @@
 package com.flat20.gui.widgets;
 
-import android.util.Log;
 import android.view.KeyEvent;
-import android.hardware.Sensor;
 
-import com.flat20.gui.Renderer;
 import com.flat20.gui.animations.Animation;
 import com.flat20.gui.animations.AnimationManager;
 import com.flat20.gui.animations.Slide;
@@ -76,24 +73,15 @@ public class MidiWidgetContainer extends WidgetContainer implements IScrollable 
 			WidgetContainer wc = (WidgetContainer) mFocusedWidget;
 			if (wc.getFocusedWidget() instanceof MidiWidget) {
 				MidiWidget mw = (MidiWidget)wc.getFocusedWidget();
+				if (mw.getName().startsWith("Sensor"))	//Ignore sensor widgets 
+					return;
 				mw.setHold( !mw.isHolding() );
 			}
 		}
 		//return super.onKeyDown(keyCode, event);
 	}
 	
-	public void onSensorChanged(int sensorType, float[] sensorValues)
-	{
-		if (mFocusedWidget != null) {
-			WidgetContainer wc = (WidgetContainer) mFocusedWidget;
-			if (wc.getFocusedWidget() instanceof MidiWidget) {
-				MidiWidget mw = (MidiWidget)wc.getFocusedWidget();
-				for (int i = 0; i < sensorValues.length; i++)
-					mw.sendControlChange(i, (int)sensorValues[i]);
-			}
-		}
-	}
-
+	
 	/*
 	 * Adds the Sprite to the list and expands width and height.
 	 */

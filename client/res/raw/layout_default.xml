@@ -36,6 +36,17 @@
 			<pad x="216" y="244" width="60" height="60" />
 			<pad x="292" y="244" width="60" height="60" />
 		</screen>
+		
+		<screen x="0" y="962" width="480" height="318">
+			<orientation x="245" y="162" width="150" height="150" />
+			<accelerometer x="245" y="6" width="150" height="150" />
+			<light x="5" y="16" width="42" height="288" />
+			<pressure x="55" y="16" width="42" height="288" />
+			<proximity x="105" y="16" width="42" height="288" />
+			<temperature x="155" y="16" width="42" height="288" />
+		</screen>
+		
+		
 	</layout>
 
 
@@ -76,6 +87,15 @@
 			<pad x="475" y="320" width="110" height="110" />
 			<pad x="615" y="320" width="110" height="110" />
 
+		</screen>
+
+		<screen x="0" y="1442" width="854" height="478">
+			<orientation x="245" y="162" width="150" height="150" />
+			<accelerometer x="245" y="6" width="150" height="150" />
+			<light x="5" y="16" width="42" height="288" />
+			<pressure x="55" y="16" width="42" height="288" />
+			<proximity x="105" y="16" width="42" height="288" />
+			<temperature x="155" y="16" width="42" height="288" />
 		</screen>
 
 	</layout>

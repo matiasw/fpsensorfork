@@ -69,34 +69,56 @@ public class XYPad extends DefaultMidiWidget implements IMidiController {
 		//mMeterOff.setSize(w, h);
 
 	}
+	
+	public void setMeterx(int newx)
+	{
+		mMeter.x = Math.max(0, Math.min(width-32, newx-16));
+		mMeterOff.x = mMeter.x;
+		lastValueX = newx;		
+	}
 
+	public void setMetery(int newy)
+	{	
+		mMeter.y = Math.max(0, Math.min(height-32, newy-16));
+		mMeterOff.y = mMeter.y;
+		lastValueY = newy;
+	}
+	
 	@Override
 	public boolean onTouchDown(int touchX, int touchY, float pressure) {
+		if (this.mName.startsWith("Sensor"))	//retarded workaround...
+			return true;
 		press(pressure);
 		return true;
 	}
 
 	@Override
 	public boolean onTouchMove(int touchX, int touchY, float pressure) {
+		if (this.mName.startsWith("Sensor"))	//retarded workaround...
+			return true;
 		int valueX = (int) Math.max(0, Math.min(0x7F, ((float) touchX / width) * 0x7F) );
 		int valueY = (int) Math.max(0, Math.min(0x7F, ((float) touchY / height) * 0x7F) );
 		if (valueX != lastValueX) {
 			sendControlChange(CC_X, valueX );
-			mMeter.x = Math.max(0, Math.min(width-32, touchX-16));
-			mMeterOff.x = mMeter.x;
-			lastValueX = valueX;
+			setMeterx(valueX);
+			//mMeter.x = Math.max(0, Math.min(width-32, touchX-16));
+			//mMeterOff.x = mMeter.x;
+			//lastValueX = valueX;
 		}
 		if (valueY != lastValueY) {
 			sendControlChange(CC_Y, valueY );
-			mMeter.y = Math.max(0, Math.min(height-32, touchY-16));
-			mMeterOff.y = mMeter.y;
-			lastValueY = valueY;
+			setMetery(valueY);
+			//mMeter.y = Math.max(0, Math.min(height-32, touchY-16));
+			//mMeterOff.y = mMeter.y;
+			//lastValueY = valueY;
 		}
 		return true;
 	}
 
 	@Override
 	public boolean onTouchUp(int touchX, int touchY, float pressure) {
+		if (this.mName.startsWith("Sensor"))	//retarded workaround...
+			return true;
 		if (!isHolding())
 			release(pressure);
 		return true;
@@ -104,6 +126,8 @@ public class XYPad extends DefaultMidiWidget implements IMidiController {
 
 	@Override
 	public boolean onTouchUpOutside(int touchX, int touchY, float pressure) {
+		if (this.mName.startsWith("Sensor"))	//retarded workaround...
+			return true;
 		if (!isHolding())
 			release(pressure);
 		return true;

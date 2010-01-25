@@ -72,12 +72,16 @@ public class Slider extends DefaultMidiWidget implements IMidiController {
 	
 	@Override
 	public boolean onTouchDown(int touchX, int touchY, float pressure) {
+		if (this.mName.startsWith("Sensor"))	//retarded workaround...
+			return true;
 		press(1.0f);
 		return true;
 	}
 
 	@Override
 	public boolean onTouchMove(int touchX, int touchY, float pressure) {
+		if (this.mName.startsWith("Sensor"))	//retarded workaround...
+			return true;
 		float dy = ((float)touchY / (float)height);
 		int value = (int) Math.max(0, Math.min(dy * 0x7F, 0x7F));
 		if (value != lastValue) {
@@ -90,6 +94,8 @@ public class Slider extends DefaultMidiWidget implements IMidiController {
 
 	@Override
 	public boolean onTouchUp(int touchX, int touchY, float pressure) {
+		if (this.mName.startsWith("Sensor"))	//retarded workaround...
+			return true;
 		if (!isHolding())
 			release(1.0f);
 		return true;
@@ -97,6 +103,8 @@ public class Slider extends DefaultMidiWidget implements IMidiController {
 
 	@Override
 	public boolean onTouchUpOutside(int touchX, int touchY, float pressure) {
+		if (this.mName.startsWith("Sensor"))	//retarded workaround...
+			return true;
 		if (!isHolding())
 			release(1.0f);
 		return true;
@@ -116,7 +124,7 @@ public class Slider extends DefaultMidiWidget implements IMidiController {
 		mMeterOff.visible = true;
 	}
  
-	private void setMeterHeight(int meterHeight) {
+	public void setMeterHeight(int meterHeight) {
 		mMeter.setSize(mMeter.width, meterHeight);
 		mMeterOff.setSize(mMeterOff.width, meterHeight);
 		/*

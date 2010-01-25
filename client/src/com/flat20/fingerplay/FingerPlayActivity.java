@@ -1,6 +1,7 @@
 package com.flat20.fingerplay;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Intent;
@@ -8,7 +9,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.KeyEvent;
 import android.widget.Toast;
-import android.hardware.SensorListener;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.Sensor;
 import android.util.Log;
@@ -25,7 +27,7 @@ import com.flat20.gui.sprites.Logo;
 import com.flat20.gui.widgets.MidiWidgetContainer;
 import com.flat20.gui.LayoutManager;
 
-public class FingerPlayActivity extends InteractiveActivity implements SensorListener {
+public class FingerPlayActivity extends InteractiveActivity implements SensorEventListener {
 
 	private SettingsModel mSettingsModel;
 
@@ -39,8 +41,7 @@ public class FingerPlayActivity extends InteractiveActivity implements SensorLis
  
     public SensorManager sensorManager;
 
-    public int num_sensors = 0;
-    public int sensor[];
+    private List<Sensor> sensors;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,21 +60,10 @@ public class FingerPlayActivity extends InteractiveActivity implements SensorLis
         Toast info = Toast.makeText(this, "Go to http://thesundancekid.net/ for help.", Toast.LENGTH_LONG);
         info.show();
 
-	sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
 
-	List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
-
-	int i = 0;
-
-	sensor = new int[10];
-
-	for(Sensor s:sensors) {
-		sensor[i] = s.getType();
-		i++;
-	}	
-
-	num_sensors = i;	
-
+        sensors = new ArrayList<Sensor>(sensorManager.getSensorList(Sensor.TYPE_ALL));
+     
         // Simple splash animation
 
         Splash navSplash = new Splash(mNavigationOverlay, 64, 190, mWidth, mNavigationOverlay.x);
@@ -106,8 +96,6 @@ public class FingerPlayActivity extends InteractiveActivity implements SensorLis
 		// Logo uses screenWidth and height and tries to fill it
 		mLogo = new Logo(mWidth, mHeight);
 		mRenderer.addSprite(mLogo);
-
-
 
         // We're drawing all controller screens in their own container so we can move them
         // separately from the navigation and the background.
@@ -171,42 +159,29 @@ public class FingerPlayActivity extends InteractiveActivity implements SensorLis
 	@Override
 	protected void onResume() {
 		super.onResume();
-		for (int i = 0; i < num_sensors; i++)
-			sensorManager.registerListener(this, sensor[i]);
+		for (int i = 0; i < sensors.size(); i++)
+			sensorManager.registerListener(this, sensors.get(i), SensorManager.SENSOR_DELAY_GAME);
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		for (int i = 0; i < num_sensors; i++)
-			sensorManager.unregisterListener(this, sensor[i]);
+		for (int i = 0; i < sensors.size(); i++)
+			sensorManager.unregisterListener(this, sensors.get(i));
 	}
 
-	public void onAccuracyChanged(int sensor, int accuracy) {
-    		Log.d("ACCU", String.format("onAccuracyChanged  sensor: %d   accuraccy: %d", sensor, accuracy));
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    		//Log.d("ACCU", String.format("onAccuracyChanged  sensor: %d   accuraccy: %d", sensor, accuracy));
   	}
 
-	public void onSensorChanged(int sensorReporting, float[] values) {
-		boolean foundSensor = false;
-
-		for (int i = 0; i < num_sensors; i++) {
-			if (sensorReporting != sensor[i]) { foundSensor = false; }
-			else { foundSensor = true; break; };
-		}
-
-		if (!foundSensor) return;
-		else {
-			switch (sensorReporting) {
-				case SensorManager.SENSOR_ORIENTATION:
-					float azimuth = values[0];
-					float pitch = values[1];
-					float roll = values[2];
-					mMidiWidgetsContainer.onSensorChanged(sensorReporting, values);		
-					break;
-				default:
-					break;
-			}
-		}
+	public void onSensorChanged(SensorEvent e) {
+		int sensorReporting = e.sensor.getType();
+		float[] values = e.values;
+		String str = "Sensor " + sensorReporting + " changed: ";
+		for (int i = 0; i < values.length; i++)
+			str += " " + values[i] + " ";
+		Log.i("SENSOR", str);
+		mMidiControllerManager.onSensorChanged(e.sensor, values);
 	}
 
 	@Override
