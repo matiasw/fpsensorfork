@@ -160,7 +160,7 @@ public class FingerPlayActivity extends InteractiveActivity implements SensorEve
 	protected void onResume() {
 		super.onResume();
 		for (int i = 0; i < sensors.size(); i++)
-			sensorManager.registerListener(this, sensors.get(i), SensorManager.SENSOR_DELAY_GAME);
+			sensorManager.registerListener(this, sensors.get(i), SensorManager.SENSOR_DELAY_UI);
 	}
 
 	@Override
@@ -175,12 +175,14 @@ public class FingerPlayActivity extends InteractiveActivity implements SensorEve
   	}
 
 	public void onSensorChanged(SensorEvent e) {
-		int sensorReporting = e.sensor.getType();
 		float[] values = e.values;
+/*
+  		int sensorReporting = e.sensor.getType();
 		String str = "Sensor " + sensorReporting + " changed: ";
 		for (int i = 0; i < values.length; i++)
 			str += " " + values[i] + " ";
 		Log.i("SENSOR", str);
+*/
 		mMidiControllerManager.onSensorChanged(e.sensor, values);
 	}
 

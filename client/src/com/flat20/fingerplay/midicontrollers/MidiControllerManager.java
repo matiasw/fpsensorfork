@@ -7,8 +7,8 @@ import java.util.Set;
 
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-import android.util.Log;
 import android.os.SystemClock;
+import android.util.Log;
 
 import com.flat20.fingerplay.network.ConnectionManager;
 import com.flat20.fingerplay.socket.commands.midi.MidiControlChange;
@@ -17,6 +17,7 @@ import com.flat20.fingerplay.socket.commands.midi.MidiNoteOn;
 import com.flat20.fingerplay.socket.commands.midi.MidiSocketCommand;
 import com.flat20.fingerplay.socket.commands.SocketCommand;
 import com.flat20.gui.widgets.MidiWidget;
+import com.flat20.gui.widgets.Slider;
 import com.flat20.gui.widgets.Widget;
 import com.flat20.gui.widgets.WidgetContainer;
 import com.flat20.gui.widgets.XYPad;
@@ -28,9 +29,7 @@ public class MidiControllerManager {
 
 	private ConnectionManager mConnectionManager = ConnectionManager.getInstance();
 
-	//Stop sensor update flooding
-	private static long mlast_send_time = SystemClock.uptimeMillis();
-	private final long SEND_DELAY = 50;	//milliseconds	
+	private final long SEND_DELAY = 75;	//milliseconds	
 
 	// Singleton
 	private static MidiControllerManager mInstance = null;
@@ -157,13 +156,10 @@ public class MidiControllerManager {
     
     public void onSensorChanged(Sensor sensor, float[] sensorValues)
 	{
-    	//Stop sensor update flooding
-    	if (SystemClock.uptimeMillis() < mlast_send_time + SEND_DELAY)
-    		return;
     	MidiWidget mw;
     	float[] val;
+    	float max;
 		//Scale values depending on sensor type:
-    	mlast_send_time = SystemClock.uptimeMillis();
 		switch (sensor.getType())
 		{
 		case Sensor.TYPE_ACCELEROMETER:	//A constant describing an accelerometer sensor type.
@@ -178,28 +174,71 @@ public class MidiControllerManager {
 				Log.e("SENSOR", "No sensor \"accelerometer\" (type " + sensor.getType() + ") found!");
 				return;
 			}
-			val = new float[3];
-			float max = sensor.getMaximumRange() * SensorManager.STANDARD_GRAVITY;	//max is reported in g's
-			//scale to 0..1 range (from - max..+max):
-			val[0] = (sensorValues[0] + max) / (2 * max);
-			val[1] = (sensorValues[1] + max) / (2 * max);
-			val[2] = (sensorValues[2] + max - SensorManager.STANDARD_GRAVITY) / (2 * max);	//TODO Futureproof me ;)
-			if (mw instanceof XYPad) {
-				((XYPad)mw).setMeterx((int)(val[0]*128.0f));
-				((XYPad)mw).setMetery((int)(val[1]*128.0f));
-			}
-			mw.sendControlChange(0, (int)(val[0]*128.0f));
-			mw.sendControlChange(1, (int)(val[1]*128.0f));
-			mw.sendControlChange(2, (int)(val[2]*128.0f));
+	    	//Stop sensor update flooding
+	    	if (SystemClock.uptimeMillis() > mw.getLastSendTime() + SEND_DELAY)
+	    	{
+				val = new float[3];
+				max = sensor.getMaximumRange() * SensorManager.STANDARD_GRAVITY;	//max is reported in g's
+				//scale to 0..1 range (from - max..+max):
+				val[0] = (sensorValues[0] + max) / (2 * max);
+				val[1] = (sensorValues[1] + max) / (2 * max);
+				val[2] = (sensorValues[2] + max - SensorManager.STANDARD_GRAVITY) / (2 * max);	//TODO Futureproof me ;)
+				if (mw instanceof XYPad) {
+					((XYPad)mw).setMeterx((int)(val[0]*128.0f));
+					((XYPad)mw).setMetery((int)(val[1]*128.0f));
+				}
+				mw.sendControlChange(0, (int)(val[0]*128.0f));
+				mw.sendControlChange(1, (int)(val[1]*128.0f));
+				mw.sendControlChange(2, (int)(val[2]*128.0f));
+	    	}
 		break;
 		case Sensor.TYPE_GYROSCOPE:	//A constant describing a gyroscope sensor type
 		
 		break;
 		case Sensor.TYPE_LIGHT:	//A constant describing an light sensor type.
-			
+			mw = (MidiWidget)getMidiControllerByName("Sensor light");
+			if (mw == null)
+			{
+				Log.e("SENSOR", "No sensor \"light\" (type " + sensor.getType() + ") found!");
+				return;
+			}
+			if (SystemClock.uptimeMillis() > mw.getLastSendTime() + SEND_DELAY)
+	    	{
+				val = new float[1];
+				max = sensor.getMaximumRange();
+				//scale to 0..1 range:
+				val[0] = (sensorValues[0]+max)/(2*max);
+				if (mw instanceof Slider) {
+					((Slider)mw).setMeterHeight(val[0]);
+				}
+				mw.sendControlChange(0, (int)(val[0]*128.0f));
+	    	}
 		break;
 		case Sensor.TYPE_MAGNETIC_FIELD:	//A constant describing a magnetic field sensor type.
-			
+			mw = (MidiWidget)getMidiControllerByName("Sensor magfield");
+			if (mw == null)
+			{
+				Log.e("SENSOR", "No sensor \"magfield\" (type " + sensor.getType() + ") found!");
+				return;
+			}
+			//Stop sensor update flooding
+			if (SystemClock.uptimeMillis() > mw.getLastSendTime() + SEND_DELAY)
+	    	{
+				val = new float[3];
+				max = 100.0f;
+				//Log.i("SENSOR", "sensor \"magfield\" " + sensor.getName() + " has max range of " + max);
+				//scale to 0..1 range:
+				val[0] = (sensorValues[0]+max)/(2*max);
+				val[1] = (sensorValues[1]+max)/(2*max);
+				val[2] = (sensorValues[2]+max)/(2*max);
+				if (mw instanceof XYPad) {
+					((XYPad)mw).setMeterx((int)(val[2]*128.0f));
+					((XYPad)mw).setMetery((int)(val[1]*128.0f));
+				}    	
+				mw.sendControlChange(0, (int)(val[0]*128.0f));
+				mw.sendControlChange(1, (int)(val[1]*128.0f));
+				mw.sendControlChange(2, (int)(val[2]*128.0f));
+	    	}
 		break;
 		case Sensor.TYPE_ORIENTATION:	//A constant describing an orientation sensor type.
 /*			values[0]: Azimuth, angle between the magnetic north direction and the Y axis, around the Z axis (0 to 359). 0=North, 90=East, 180=South, 270=West 
@@ -212,27 +251,85 @@ public class MidiControllerManager {
 				Log.e("SENSOR", "No sensor \"orientation\" (type " + sensor.getType() + ") found!");
 				return;
 			}
-			val = new float[3];
-			//scale to 0..1 range:
-			val[0] = sensorValues[0]/359.0f;
-			val[1] = (sensorValues[1]+180.0f)/359.0f;
-			val[2] = (sensorValues[2]+90.0f)/180.0f;
-			if (mw instanceof XYPad) {
-				((XYPad)mw).setMeterx((int)(val[2]*128.0f));
-				((XYPad)mw).setMetery((int)(val[1]*128.0f));
-			}
-			mw.sendControlChange(0, (int)(val[0]*128.0f));
-			mw.sendControlChange(1, (int)(val[1]*128.0f));
-			mw.sendControlChange(2, (int)(val[2]*128.0f));
+			//Stop sensor update flooding
+			if (SystemClock.uptimeMillis() > mw.getLastSendTime() + SEND_DELAY)
+	    	{
+				val = new float[3];
+				//scale to 0..1 range:
+				val[0] = sensorValues[0]/359.0f;
+				val[1] = (sensorValues[1]+180.0f)/359.0f;
+				val[2] = (sensorValues[2]+90.0f)/180.0f;
+				if (mw instanceof XYPad) {
+					((XYPad)mw).setMeterx((int)(val[2]*128.0f));
+					((XYPad)mw).setMetery((int)(val[1]*128.0f));
+				}
+				mw.sendControlChange(0, (int)(val[0]*128.0f));
+				mw.sendControlChange(1, (int)(val[1]*128.0f));
+				mw.sendControlChange(2, (int)(val[2]*128.0f));
+	    	}
 		break;
+		//TODO untested
 		case Sensor.TYPE_PRESSURE:	//A constant describing a pressure sensor type
-		
+			mw = (MidiWidget)getMidiControllerByName("Sensor pressure");
+			if (mw == null)
+			{
+				Log.e("SENSOR", "No sensor \"pressure\" (type " + sensor.getType() + ") found!");
+				return;
+			}
+			//Stop sensor update flooding
+			if (SystemClock.uptimeMillis() > mw.getLastSendTime() + SEND_DELAY)
+	    	{
+				val = new float[1];
+				max = sensor.getMaximumRange();
+				//scale to 0..1 range:
+				val[0] = (sensorValues[0]+max)/(2*max);
+				if (mw instanceof Slider) {
+					((Slider)mw).setMeterHeight(val[0]);
+				}
+				mw.sendControlChange(0, (int)(val[0]*128.0f));
+	    	}
 		break;
+		//TODO untested
 		case Sensor.TYPE_PROXIMITY:	//A constant describing an proximity sensor type.
-		
+			mw = (MidiWidget)getMidiControllerByName("Sensor proximity");
+			if (mw == null)
+			{
+				Log.e("SENSOR", "No sensor \"proximity\" (type " + sensor.getType() + ") found!");
+				return;
+			}
+	    	//Stop sensor update flooding
+			if (SystemClock.uptimeMillis() > mw.getLastSendTime() + SEND_DELAY)
+	    	{
+				val = new float[1];
+				max = sensor.getMaximumRange();
+				//scale to 0..1 range:
+				val[0] = (sensorValues[0]+max)/(2*max);
+				if (mw instanceof Slider) {
+					((Slider)mw).setMeterHeight(val[0]);
+				}
+				mw.sendControlChange(0, (int)(val[0]*128.0f));
+	    	}
 		break;
+		//TODO untested
 		case Sensor.TYPE_TEMPERATURE:	//A constant describing a temperature sensor type
-		
+			mw = (MidiWidget)getMidiControllerByName("Sensor temperature");
+			if (mw == null)
+			{
+				Log.e("SENSOR", "No sensor \"temperature\" (type " + sensor.getType() + ") found!");
+				return;
+			}
+	    	//Stop sensor update flooding
+			if (SystemClock.uptimeMillis() > mw.getLastSendTime() + SEND_DELAY)
+	    	{
+				val = new float[1];
+				max = sensor.getMaximumRange();
+				//scale to 0..1 range:
+				val[0] = (sensorValues[0]+max)/(2*max);
+				if (mw instanceof Slider) {
+					((Slider)mw).setMeterHeight(val[0]);
+				}
+				mw.sendControlChange(0, (int)(val[0]*128.0f));		
+	    	}
 		break;
 		}
 	}

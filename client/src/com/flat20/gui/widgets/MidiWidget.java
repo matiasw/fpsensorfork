@@ -1,5 +1,7 @@
 package com.flat20.gui.widgets;
 
+import android.os.SystemClock;
+
 import com.flat20.fingerplay.midicontrollers.IMidiController;
 import com.flat20.fingerplay.midicontrollers.IOnControlChangeListener;
 
@@ -15,6 +17,9 @@ public abstract class MidiWidget extends Widget implements IMidiController {
 	final protected MaterialSprite mOutlineSelected;
 	final protected MaterialSprite mTvScanlines;
 */
+	//Stop sensor update flooding
+	private long mlast_send_time = SystemClock.uptimeMillis();
+	
 	protected String mName = null;
 
 	protected boolean mHold = false;
@@ -25,6 +30,11 @@ public abstract class MidiWidget extends Widget implements IMidiController {
 		setName(name);
 	}
 
+	public long getLastSendTime()
+	{
+		return mlast_send_time;
+	}
+	
 	public void setName(String name) {
 		mName = name;
 	}
@@ -33,6 +43,7 @@ public abstract class MidiWidget extends Widget implements IMidiController {
 	}
 
 	public void sendControlChange(int index, int value) {
+		mlast_send_time = SystemClock.uptimeMillis();
 		if (listener != null) {
 			listener.onControlChange(this, index, value);
 		}

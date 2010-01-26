@@ -40,10 +40,11 @@
 		<screen x="0" y="962" width="480" height="318">
 			<orientation x="245" y="162" width="150" height="150" />
 			<accelerometer x="245" y="6" width="150" height="150" />
-			<light x="5" y="16" width="42" height="288" />
-			<pressure x="55" y="16" width="42" height="288" />
-			<proximity x="105" y="16" width="42" height="288" />
-			<temperature x="155" y="16" width="42" height="288" />
+			<magfield x="95" y="162" width="150" height="150" />
+			<light x="5" y="16" width="42" height="140" />
+			<pressure x="55" y="16" width="42" height="140" />
+			<proximity x="105" y="16" width="42" height="140" />
+			<temperature x="155" y="16" width="42" height="140" />
 		</screen>
 		
 		

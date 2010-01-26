@@ -123,7 +123,12 @@ public class Slider extends DefaultMidiWidget implements IMidiController {
 		mMeter.visible = false;
 		mMeterOff.visible = true;
 	}
- 
+	
+	//set height relative to full height
+	public void setMeterHeight(float relativeHeight) {
+		setMeterHeight((int)(relativeHeight*((float)height)));
+	}
+	
 	public void setMeterHeight(int meterHeight) {
 		mMeter.setSize(mMeter.width, meterHeight);
 		mMeterOff.setSize(mMeterOff.width, meterHeight);
